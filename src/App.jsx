@@ -7,7 +7,7 @@ import Settings from "./pages/Settings.jsx";
 export default function App() {
     return (
         <BrowserRouter>
-            <div className="bg-neutral-950 min-h-screen pb-16">
+            <div className="bg-neutral-950 min-h-screen pb-16 overflow-y-scroll">
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/settings" element={<Settings />} />

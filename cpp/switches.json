@@ -1,0 +1,12 @@
+{
+    "switches": [
+        {
+            "id": 1,
+            "state": "ON"
+        },
+        {
+            "id": 2,
+            "state": "ON"
+        }
+    ]
+}

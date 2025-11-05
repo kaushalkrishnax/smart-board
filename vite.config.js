@@ -44,5 +44,9 @@ export default defineConfig({
         ws: true,
       },
     },
+    allowedHosts: ['worthy-relaxing-airedale.ngrok-free.app'],
   },
+  build: {
+    target: "es2017",
+  }
 });

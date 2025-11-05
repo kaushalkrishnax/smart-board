@@ -1,40 +1,38 @@
-// ✅ src/context/SocketContext.jsx
+// src/context/SocketContext.jsx
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useAppContext } from "./AppContext";
 
 const SocketContext = createContext(null);
 
-export function useSocket() {
+export function useSocketContext() {
   return useContext(SocketContext);
 }
 
 export function SocketProvider({ children }) {
   const socketRef = useRef(null);
+  const { settings } = useAppContext();
+  const [socket, setSocket] = useState(null);
   const [socketReady, setSocketReady] = useState(false);
+  const [switches, setSwitches] = useState([]);
+  const [ONCount, setONCount] = useState(0);
 
+  // 1. Handle WebSocket connection, listen for messages, and toggle state updates
   useEffect(() => {
-    let settings = null;
-
-    try {
-      const raw = localStorage.getItem("appSettings");
-      settings = raw ? JSON.parse(raw) : null;
-    } catch (err) {
-      console.error("❌ Invalid settings JSON in localStorage");
-    }
-
-    if (!settings || !settings.address) {
-      console.warn("⚠ No WebSocket address stored. Go to Settings first.");
+    if (!settings?.address) {
+      console.warn("No WebSocket address stored. Go to Settings and save it.");
       return;
     }
 
-    console.log("🔌 Connecting WebSocket to:", settings.address);
+    const ws = new WebSocket(settings.address);
 
-    // ✅ Use NATIVE WebSocket, not socket.io
-    socketRef.current = new WebSocket(settings.address);
+    socketRef.current = ws;
+    setSocket(ws);
 
-    socketRef.current.onopen = () => {
-      console.log("✅ WS Connected");
+    ws.onopen = () => {
+      console.log("WebSocket connected");
 
-      socketRef.current.send(
+      // Send auth immediately on connection
+      ws.send(
         JSON.stringify({
           type: "auth",
           token: settings.token,
@@ -44,20 +42,71 @@ export function SocketProvider({ children }) {
       setSocketReady(true);
     };
 
-    socketRef.current.onerror = (err) => {
-      console.error("❌ WebSocket Error:", err);
-    };
+    ws.onerror = (err) => console.error("WebSocket Error:", err);
 
-    socketRef.current.onclose = () => {
-      console.warn("⚠ WS Disconnected");
+    ws.onclose = () => {
+      console.warn("WebSocket disconnected");
       setSocketReady(false);
     };
 
-    return () => socketRef.current?.close();
+    // Listen for updates from server
+    ws.onmessage = (event) => {
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        console.error("Invalid JSON from server:", event.data);
+        return;
+      }
+
+      console.log("Received data:", data);
+
+      if (data.type === "switches" && Array.isArray(data.switches)) {
+        setSwitches(
+          data.switches.map((sw, idx) => ({
+            id: sw.id,
+            state: sw.state
+          }))
+        );
+        setONCount(data.switches.filter((sw) => sw.state === "ON").length);
+      }
+    };
+
+    return () => ws.close();
   }, []);
 
+  const handleToggle = (id, currentState) => {
+    const newState = currentState === "ON" ? "OFF" : "ON";
+
+    socket?.send(
+      JSON.stringify({
+        type: "toggle",
+        id,
+        state: newState,
+      })
+    );
+  };
+
+  const sendAll = (targetState) => {
+    socket?.send(
+      JSON.stringify({
+        type: "all",
+        state: targetState,
+      })
+    );
+  };
+
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, socketReady }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        socketReady,
+        switches,
+        ONCount,
+        handleToggle,
+        sendAll,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

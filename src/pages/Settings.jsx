@@ -1,35 +1,11 @@
-import React, { useEffect, useState } from "react";
+// src/pages/Settings.jsx
+import { useState } from "react";
 import { Wifi, Server, Lightbulb, RefreshCw, Router, Lock, Pin } from "lucide-react";
+import { useAppContext } from "../context/AppContext";
 
 export default function Settings() {
-  const [settings, setSettings] = useState(null);
+  const { settings, saveSettings } = useAppContext();
   const [saving, setSaving] = useState(false);
-
-  // ✅ Load settings from LocalStorage on mount
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("appSettings"));
-
-    if (stored) {
-      setSettings(stored);
-    } else {
-      // Default settings first-time app load
-      const defaultSettings = {
-        address: "ws://192.168.4.1",
-        token: "abc123",
-        wifi: { ssid: "", password: "" },
-        switches: ["Fan", "Light Bulb"],
-      };
-      localStorage.setItem("appSettings", JSON.stringify(defaultSettings));
-      setSettings(defaultSettings);
-    }
-  }, []);
-
-  const saveToLocal = (updated) => {
-    setSaving(true);
-    localStorage.setItem("appSettings", JSON.stringify(updated));
-    setSettings(updated);
-    setTimeout(() => setSaving(false), 700);
-  };
 
   const handleChange = (section, key, value) => {
     const updated = { ...settings };
@@ -37,24 +13,24 @@ export default function Settings() {
     if (key === "") updated[section] = value;
     else updated[section][key] = value;
 
-    saveToLocal(updated);
+    saveSettings(updated);
+    setSaving(true);
+    setTimeout(() => setSaving(false), 700);
   };
 
   if (!settings) return null;
-  // --- UI BELOW ---
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-neutral-950 to-black text-white relative">
-      <div className="relative z-10 max-w-4xl mx-auto px-4 py-6 space-y-6">
-      <div className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-linear-to-br from-slate-950 via-neutral-950 to-black text-white relative max-w-4xl mx-auto">
+      <div className="relative z-10 p-6 space-y-6">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-2 bg-linear-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
             Settings
           </h1>
           <p className="text-sm text-gray-400">Modify In-App Settings</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
           {/* === 1. Switch Labels === */}
           <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
             <div className="flex items-center gap-3">
@@ -82,7 +58,6 @@ export default function Settings() {
           </div>
 
           <div className="space-y-6">
-
             {/* === 2. WiFi Credentials === */}
             <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
               <div className="flex items-center gap-3">
@@ -115,7 +90,7 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* === 3. Developer === */}
+            {/* === 3. Developer Settings === */}
             <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
               <div className="flex items-center gap-3">
                 <Server className="w-5 h-5 text-purple-400" />

@@ -1,0 +1,14 @@
+{
+  "appId": "com.smart.board",
+  "appName": "Smart Board",
+  "webDir": "dist",
+  "plugins": {
+        "SplashScreen": {
+            "launchShowDuration": 2000,
+            "backgroundColor": "#0a0a0a",
+            "showSpinner": false,
+            "splashFullScreen": true,
+            "splashImmersive": true
+        }
+    }
+}
