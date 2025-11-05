@@ -1,104 +1,157 @@
-import { useEffect, useState } from "react";
-import { getSettings, updateSetting } from "../utils/api";
+import React, { useEffect, useState } from "react";
+import { Wifi, Server, Lightbulb, RefreshCw, Router, Lock, Pin } from "lucide-react";
 
 export default function Settings() {
-    const [settings, setSettings] = useState(null);
+  const [settings, setSettings] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        getSettings().then(setSettings);
-    }, []);
+  // ✅ Load settings from LocalStorage on mount
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("appSettings"));
 
-    const handleChange = async (section, key, value) => {
-        await updateSetting(section, key, value);
+    if (stored) {
+      setSettings(stored);
+    } else {
+      // Default settings first-time app load
+      const defaultSettings = {
+        address: "ws://192.168.4.1",
+        token: "abc123",
+        wifi: { ssid: "", password: "" },
+        switches: ["Fan", "Light Bulb"],
+      };
+      localStorage.setItem("appSettings", JSON.stringify(defaultSettings));
+      setSettings(defaultSettings);
+    }
+  }, []);
 
-        setSettings(prev => {
-            if (key === "") {
-                return { ...prev, [section]: value };
-            }
-            return {
-                ...prev,
-                [section]: { ...prev[section], [key]: value }
-            };
-        });
-    };
+  const saveToLocal = (updated) => {
+    setSaving(true);
+    localStorage.setItem("appSettings", JSON.stringify(updated));
+    setSettings(updated);
+    setTimeout(() => setSaving(false), 700);
+  };
 
-    if (!settings) return <div className="p-6 text-gray-300">Loading...</div>;
+  const handleChange = (section, key, value) => {
+    const updated = { ...settings };
 
-    return (
-        <div className="min-h-screen bg-neutral-950 text-gray-200 p-6 space-y-6">
-            <h1 className="text-2xl font-bold mb-4">Settings</h1>
+    if (key === "") updated[section] = value;
+    else updated[section][key] = value;
 
-            <div>
-                <h2 className="text-lg font-semibold mb-2 text-blue-400">
-                    Developer
-                </h2>
-                <div className="flex items-center justify-between bg-neutral-800 p-3 rounded-lg border border-neutral-700">
-                    <span>Address</span>
-                    <input
-                        type="text"
-                        value={settings.address}
-                        onChange={e =>
-                            handleChange("address", "", e.target.value)
-                        }
-                        className="bg-neutral-700 text-white p-2 rounded w-48 text-center"
-                    />
-                </div>
-            </div>
+    saveToLocal(updated);
+  };
 
-            <div>
-                <h2 className="text-lg font-semibold mb-2 text-blue-400">
-                    Wi-Fi
-                </h2>
-                <div className="flex flex-col gap-3">
-                    <div className="flex justify-between bg-neutral-800 p-3 rounded-lg border border-neutral-700">
-                        <span>SSID</span>
-                        <input
-                            value={settings.wifi.ssid}
-                            onChange={e =>
-                                handleChange("wifi", "ssid", e.target.value)
-                            }
-                            className="bg-neutral-700 text-white p-2 rounded w-32 text-center"
-                        />
-                    </div>
-                    <div className="flex justify-between bg-neutral-800 p-3 rounded-lg border border-neutral-700">
-                        <span>Password</span>
-                        <input
-                            type="password"
-                            value={settings.wifi.password}
-                            onChange={e =>
-                                handleChange("wifi", "password", e.target.value)
-                            }
-                            className="bg-neutral-700 text-white p-2 rounded w-32 text-center"
-                        />
-                    </div>
-                </div>
-            </div>
+  if (!settings) return null;
+  // --- UI BELOW ---
 
-            <div>
-                <h2 className="text-lg font-semibold mb-2 text-blue-400">
-                    Smart Board
-                </h2>
-                <div className="flex flex-col gap-2">
-                    {settings.switches.map((sw, i) => (
-                        <div
-                            key={i}
-                            className="bg-neutral-800 p-3 rounded-lg border border-neutral-700 flex justify-between"
-                        >
-                            <span>Switch {i + 1}</span>
-                            <input
-                                value={sw}
-                                onChange={e => {
-                                    const newList = [...settings.switches];
-                                    handleChange("switches", "", newList);
-                                    newList[i] = e.target.value;
-                                    handleChange("switches", "", newList);
-                                }}
-                                className="bg-neutral-700 text-white p-2 rounded w-40 text-center"
-                            />
-                        </div>
-                    ))}
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-neutral-950 to-black text-white relative">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="text-center mb-6">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            Settings
+          </h1>
+          <p className="text-sm text-gray-400">Modify In-App Settings</p>
         </div>
-    );
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* === 1. Switch Labels === */}
+          <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <Lightbulb className="w-5 h-5 text-cyan-400" />
+              <h2 className="text-xl font-bold">Smart Board Labels</h2>
+            </div>
+
+            {settings.switches.map((sw, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/30">
+                  <span className="font-bold text-blue-300">{i + 1}</span>
+                </div>
+                <input
+                  type="text"
+                  value={sw}
+                  onChange={(e) => {
+                    const list = [...settings.switches];
+                    list[i] = e.target.value;
+                    handleChange("switches", "", list);
+                  }}
+                  className="flex-1 bg-neutral-800 text-white px-4 py-2.5 rounded-lg border border-neutral-700"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-6">
+
+            {/* === 2. WiFi Credentials === */}
+            <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <Wifi className="w-5 h-5 text-blue-400" />
+                <h2 className="text-xl font-bold">Wi-Fi Credentials</h2>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
+                  <Router className="w-4 h-4" /> SSID
+                </label>
+                <input
+                  type="text"
+                  value={settings.wifi.ssid}
+                  onChange={(e) => handleChange("wifi", "ssid", e.target.value)}
+                  className="w-full bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
+                  <Lock className="w-4 h-4" /> Password
+                </label>
+                <input
+                  type="password"
+                  value={settings.wifi.password}
+                  onChange={(e) => handleChange("wifi", "password", e.target.value)}
+                  className="w-full bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
+                />
+              </div>
+            </div>
+
+            {/* === 3. Developer === */}
+            <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <Server className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-bold">Developer Settings</h2>
+              </div>
+
+              <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
+                <Pin className="w-4 h-4" /> WebSocket Address
+              </label>
+              <input
+                type="text"
+                value={settings.address}
+                onChange={(e) => handleChange("address", "", e.target.value)}
+                className="w-full font-mono bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
+              />
+
+              <label className="flex items-center gap-2 mt-4 mb-2 text-sm text-gray-300">
+                Token
+              </label>
+              <input
+                type="text"
+                value={settings.token}
+                onChange={(e) => handleChange("token", "", e.target.value)}
+                className="w-full font-mono bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
+              />
+            </div>
+          </div>
+        </div>
+
+        {saving && (
+          <div className="flex items-center gap-2 text-gray-400 justify-center py-4">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <p>Saving...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
