@@ -57,76 +57,42 @@ export default function Settings() {
             ))}
           </div>
 
-          <div className="space-y-6">
-            {/* === 2. WiFi Credentials === */}
-            <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <Wifi className="w-5 h-5 text-blue-400" />
-                <h2 className="text-xl font-bold">Wi-Fi Credentials</h2>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
-                  <Router className="w-4 h-4" /> SSID
-                </label>
-                <input
-                  type="text"
-                  value={settings.wifi.ssid}
-                  onChange={(e) => handleChange("wifi", "ssid", e.target.value)}
-                  className="w-full bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
-                  <Lock className="w-4 h-4" /> Password
-                </label>
-                <input
-                  type="password"
-                  value={settings.wifi.password}
-                  onChange={(e) => handleChange("wifi", "password", e.target.value)}
-                  className="w-full bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
-                />
-              </div>
+          {/* === 2. Developer Settings === */}
+          <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <Server className="w-5 h-5 text-purple-400" />
+              <h2 className="text-xl font-bold">Developer Settings</h2>
             </div>
 
-            {/* === 3. Developer Settings === */}
-            <div className="bg-neutral-900/40 rounded-3xl border border-neutral-700/50 p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <Server className="w-5 h-5 text-purple-400" />
-                <h2 className="text-xl font-bold">Developer Settings</h2>
-              </div>
+            <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
+              <Pin className="w-4 h-4" /> WebSocket Address
+            </label>
+            <input
+              type="text"
+              value={settings.address}
+              onChange={(e) => handleChange("address", "", e.target.value)}
+              className="w-full font-mono bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
+            />
 
-              <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
-                <Pin className="w-4 h-4" /> WebSocket Address
-              </label>
-              <input
-                type="text"
-                value={settings.address}
-                onChange={(e) => handleChange("address", "", e.target.value)}
-                className="w-full font-mono bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
-              />
-
-              <label className="flex items-center gap-2 mt-4 mb-2 text-sm text-gray-300">
-                Token
-              </label>
-              <input
-                type="text"
-                value={settings.token}
-                onChange={(e) => handleChange("token", "", e.target.value)}
-                className="w-full font-mono bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
-              />
-            </div>
+            <label className="flex items-center gap-2 mt-4 mb-2 text-sm text-gray-300">
+              Token
+            </label>
+            <input
+              type="text"
+              value={settings.token}
+              onChange={(e) => handleChange("token", "", e.target.value)}
+              className="w-full font-mono bg-neutral-800 px-4 py-2.5 rounded-lg border border-neutral-700"
+            />
           </div>
         </div>
-
-        {saving && (
-          <div className="flex items-center gap-2 text-gray-400 justify-center py-4">
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            <p>Saving...</p>
-          </div>
-        )}
       </div>
+
+      {saving && (
+        <div className="flex items-center gap-2 text-gray-400 justify-center py-4">
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          <p>Saving...</p>
+        </div>
+      )}
     </div>
   );
 }

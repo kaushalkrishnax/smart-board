@@ -14,7 +14,6 @@ export function AppProvider({ children }) {
         return storedSettings || {
             address: "ws://localhost:8080",
             token: "abc123",
-            wifi: { ssid: "", password: "" },
             switches: ["Fan", "Light Bulb"],
         };
     });

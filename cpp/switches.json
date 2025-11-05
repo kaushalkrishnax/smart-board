@@ -2,11 +2,11 @@
     "switches": [
         {
             "id": 1,
-            "state": "ON"
+            "state": "OFF"
         },
         {
             "id": 2,
-            "state": "ON"
+            "state": "OFF"
         }
     ]
 }
