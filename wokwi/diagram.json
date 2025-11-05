@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "author": "SmartBoard",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay1",
+      "top": -20,
+      "left": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-lightbulb",
+      "id": "appliance1",
+      "top": -20,
+      "left": 350,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 60,
+      "left": 350,
+      "attrs": {
+        "color": "yellow"
+      }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay2",
+      "top": 150,
+      "left": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-lightbulb",
+      "id": "appliance2",
+      "top": 150,
+      "left": 350,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 230,
+      "left": 350,
+      "attrs": {
+        "color": "yellow"
+      }
+    }
+  ],
+  "connections": [
+    ["relay1:VCC", "esp:3V3", "red", []],
+    ["relay1:GND", "esp:GND.1", "black", []],
+    ["relay1:IN", "esp:D5", "green", []],
+
+    ["relay2:VCC", "esp:3V3", "red", []],
+    ["relay2:GND", "esp:GND.1", "black", []],
+    ["relay2:IN", "esp:D18", "green", []],
+
+    ["relay1:COM", "appliance1:AC1", "green", []],
+    ["relay1:NO", "appliance1:AC2", "red", []],
+
+    ["relay2:COM", "appliance2:AC1", "green", []],
+    ["relay2:NO", "appliance2:AC2", "red", []],
+
+    ["led1:A", "esp:D5", "green", []],
+    ["led1:C", "esp:GND.2", "black", []],
+
+    ["led2:A", "esp:D18", "green", []],
+    ["led2:C", "esp:GND.2", "black", []]
+  ],
+  "filesystem": {
+    "type": "spiffs"
+  },
+  "dependencies": {}
+}
