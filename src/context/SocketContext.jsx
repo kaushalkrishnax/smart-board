@@ -1,6 +1,6 @@
-// src/context/SocketContext.jsx
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { useAppContext } from "./AppContext";
+import { SmartBoard } from "../plugins/smart-board";
 
 const SocketContext = createContext(null);
 
@@ -9,102 +9,76 @@ export function useSocketContext() {
 }
 
 export function SocketProvider({ children }) {
-  const socketRef = useRef(null);
-  const { settings } = useAppContext();
-  const [socket, setSocket] = useState(null);
-  const [socketReady, setSocketReady] = useState(false);
+  const { config } = useAppContext();
+
+  const [isConnected, setIsConnected] = useState(false);
   const [switches, setSwitches] = useState([]);
-  const [ONCount, setONCount] = useState(0);
 
-  // 1. Handle WebSocket connection, listen for messages, and toggle state updates
+  const activeCount = useMemo(
+    () => switches.filter((s) => s.state === "ON").length,
+    [switches]
+  );
+
   useEffect(() => {
-    if (!settings?.address) {
-      console.warn("No WebSocket address stored. Go to Settings and save it.");
-      return;
-    }
+    if (!config?.address) return;
 
-    const ws = new WebSocket(settings.address);
+    let listenerHandle;
+    let isActive = true;
 
-    socketRef.current = ws;
-    setSocket(ws);
+    const setupConnection = async () => {
+      await SmartBoard.stopWebSocket();
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
+      listenerHandle = await SmartBoard.addListener("esp_event", ({ data }) => {
+        if (!isActive) return;
 
-      // Send auth immediately on connection
-      ws.send(
-        JSON.stringify({
-          type: "auth",
-          token: settings.token,
-        })
-      );
+        try {
+          const msg = JSON.parse(data);
 
-      setSocketReady(true);
+          if (msg.type === "switches") {
+            setSwitches(msg.switches);
+          } else if (msg.type === "connected") {
+            setIsConnected(true);
+          } else if (msg.type === "closed" || msg.type === "error") {
+            setIsConnected(false);
+          }
+        } catch (e) {
+          console.error("Failed to parse message", e);
+        }
+      });
+
+      await SmartBoard.startWebSocket();
     };
 
-    ws.onerror = (err) => console.error("WebSocket Error:", err);
+    setupConnection();
 
-    ws.onclose = () => {
-      console.warn("WebSocket disconnected");
-      setSocketReady(false);
+    return () => {
+      isActive = false;
+      if (listenerHandle) listenerHandle.remove();
+      SmartBoard.stopWebSocket();
     };
+  }, [config?.address, config?.token]);
 
-    // Listen for updates from server
-    ws.onmessage = (event) => {
-      let data;
-      try {
-        data = JSON.parse(event.data);
-      } catch {
-        console.error("Invalid JSON from server:", event.data);
-        return;
-      }
-
-      console.log("Received data:", data);
-
-      if (data.type === "switches" && Array.isArray(data.switches)) {
-        setSwitches(
-          data.switches.map((sw, idx) => ({
-            id: sw.id,
-            state: sw.state
-          }))
-        );
-        setONCount(data.switches.filter((sw) => sw.state === "ON").length);
-      }
-    };
-
-    return () => ws.close();
-  }, []);
-
-  const handleToggle = (id, currentState) => {
-    const newState = currentState === "ON" ? "OFF" : "ON";
-
-    socket?.send(
-      JSON.stringify({
+  const actions = {
+    toggle: (id, currentState) => {
+      SmartBoard.sendAction({
         type: "toggle",
         id,
-        state: newState,
-      })
-    );
-  };
-
-  const sendAll = (targetState) => {
-    socket?.send(
-      JSON.stringify({
-        type: "all",
-        state: targetState,
-      })
-    );
+        state: currentState === "ON" ? "OFF" : "ON",
+      });
+    },
+    setAll: (state) => {
+      SmartBoard.sendAction({ type: "all", state });
+    },
   };
 
   return (
     <SocketContext.Provider
       value={{
-        socket,
-        socketReady,
+        socketReady: isConnected,
         switches,
-        ONCount,
-        handleToggle,
-        sendAll,
+        ONCount: activeCount,
+        handleToggle: actions.toggle,
+        sendAll: actions.setAll,
       }}
     >
       {children}

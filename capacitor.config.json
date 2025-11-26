@@ -3,12 +3,12 @@
   "appName": "Smart Board",
   "webDir": "dist",
   "plugins": {
-        "SplashScreen": {
-            "launchShowDuration": 1000,
-            "backgroundColor": "#0a0a0a",
-            "showSpinner": false,
-            "splashFullScreen": true,
-            "splashImmersive": true
-        }
+    "SplashScreen": {
+      "launchShowDuration": 1000,
+      "backgroundColor": "#0a0a0a",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
     }
+  }
 }
