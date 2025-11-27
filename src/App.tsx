@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -6,17 +7,34 @@ import {
   matchPath,
 } from "react-router-dom";
 import BottomNav from "./components/BottomNav";
-import Home from "./pages/Home.jsx";
-import Automations from "./pages/Automations.jsx";
-import Settings from "./pages/Settings.jsx";
-import Automation from "./components/automation/Automation.jsx";
+import Home from "./pages/Home";
+import Automations from "./pages/Automations";
+import Settings from "./pages/Settings";
+import AutomationEditor from "./components/Automation";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
+import { useAppStore } from "./store/useAppStore";
 
 export default function App() {
+  const { loadData, connectSocket, theme } = useAppStore();
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    loadData().then(() => {
+      connectSocket();
+    });
+  }, [loadData, connectSocket]);
+
   return (
     <BrowserRouter>
-      <div className="bg-neutral-950 min-h-screen">
+      <div className="min-h-screen bg-linear-to-br from-zinc-50 via-zinc-100 to-zinc-50 dark:from-zinc-950 dark:via-black dark:to-zinc-950 text-zinc-900 dark:text-zinc-50 transition-colors duration-300">
         <AppRoutes />
       </div>
     </BrowserRouter>
@@ -41,15 +59,14 @@ function AppRoutes() {
   );
 
   return (
-    <>
+    <div className="max-w-3xl mx-auto">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/automations" element={<Automations />} />
-        <Route path="/automations/:id" element={<Automation />} />
-        <Route path="/scheduling" element={<Scheduling />} />
+        <Route path="/automations/:id" element={<AutomationEditor />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
       {!hideBottomNav && <BottomNav />}
-    </>
+    </div>
   );
 }

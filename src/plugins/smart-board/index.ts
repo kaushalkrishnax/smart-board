@@ -1,7 +1,10 @@
 // index.ts
 import { registerPlugin } from "@capacitor/core";
+import type { PluginListenerHandle } from "@capacitor/core";
 
 export interface SmartBoardPlugin {
+  addListener(eventName: string, listenerFunc: (data: any) => void): Promise<PluginListenerHandle>;
+  removeAllListeners(): Promise<void>;
   setConfig(options: {
     url: string;
     token: string;

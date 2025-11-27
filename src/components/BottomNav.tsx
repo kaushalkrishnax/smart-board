@@ -1,4 +1,3 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
 import { HomeIcon, AutomationsIcon, SettingsIcon } from "../icons";
 
@@ -15,7 +14,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-900/90 backdrop-blur-md border-t border-neutral-800 flex justify-around items-center py-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 flex justify-around items-center py-2 pb-safe transition-colors duration-300 shadow-xl dark:shadow-zinc-950/50">
       {navItems.map(({ name, icon: Icon, path, center }) => (
         <NavLink
           key={name}
@@ -25,14 +24,13 @@ export default function BottomNav() {
         >
           {({ isActive }) => (
             <div
-              className={`
-                flex items-center justify-center transition-all duration-300 w-14 h-14
-                ${
-                  center && isActive
-                    ? "rounded-full shadow-xl bg-white dark:bg-neutral-800 border border-neutral-700 -translate-y-8 scale-120 outline-8 outline-neutral-950"
-                    : "w-14 h-14 scale-100"
-                }
-              `}
+              className={`flex items-center justify-center transition-all duration-300 w-14 h-14 ${
+                center && isActive
+                  ? "rounded-full shadow-xl bg-linear-to-r from-blue-600 to-cyan-600 border border-blue-400 dark:border-cyan-500 -translate-y-8 scale-120 text-white"
+                  : "w-14 h-14 scale-100 text-zinc-400 dark:text-zinc-500"
+              } ${
+                !center && isActive ? "text-blue-600 dark:text-blue-400" : ""
+              }`}
             >
               <Icon focused={isActive} />
             </div>

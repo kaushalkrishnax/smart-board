@@ -36,6 +36,7 @@ public class AutomationService extends Service implements SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
+    private Sensor proximitySensor;
     private SmartBoard smartBoard;
     private PowerManager.WakeLock wakeLock;
 
@@ -45,6 +46,8 @@ public class AutomationService extends Service implements SensorEventListener {
 
     private boolean isFaceUpActive = false;
     private boolean isFaceDownActive = false;
+
+    private boolean isCovered = false;
 
     private float mAccel;
     private float mAccelCurrent;
@@ -63,10 +66,19 @@ public class AutomationService extends Service implements SensorEventListener {
         }
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            if (accelerometer != null) {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+
+            proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+
+            if (proximitySensor != null) {
+                sensorManager.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
         }
 
         mAccel = 0.00f;
@@ -139,6 +151,11 @@ public class AutomationService extends Service implements SensorEventListener {
             handleShakeDetection(x, y, z);
             handleOrientationDetection(z);
         }
+
+        else if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+            float distance = event.values[0];
+            handleProximityChange(distance);
+        }
     }
 
     private static final float SHAKE_THRESHOLD_GRAVITY = 2.7F;
@@ -193,6 +210,23 @@ public class AutomationService extends Service implements SensorEventListener {
         } else if (isNeutral) {
             isFaceUpActive = false;
             isFaceDownActive = false;
+        }
+    }
+
+    private void handleProximityChange(float distance) {
+
+        final float NEAR_THRESHOLD = 1.0f;
+
+        boolean currentlyCovered = distance < NEAR_THRESHOLD;
+
+        if (currentlyCovered && !isCovered) {
+
+            isCovered = true;
+            processTrigger("proximity_near");
+        } else if (!currentlyCovered && isCovered) {
+
+            isCovered = false;
+            processTrigger("proximity_far");
         }
     }
 
