@@ -2,13 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission
     android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
   />
     
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+    android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"
+  />
     <uses-permission
     android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
   />
@@ -54,10 +62,20 @@
       android:name=".services.AutomationService"
       android:enabled="true"
       android:exported="false"
-      android:foregroundServiceType="dataSync"
+      android:stopWithTask="false"
+      android:foregroundServiceType="microphone|dataSync"
+    />
+    <activity
+      android:name=".ui.VoiceAssistantActivity"
+      android:theme="@style/Theme.SmartBoard.Transparent"
+      android:launchMode="singleInstance"
+      android:showOnLockScreen="true"
+      android:showWhenLocked="true"
+      android:turnScreenOn="true"
+      android:excludeFromRecents="true"
+      android:exported="false"
     />
 
     </application>
 
 </manifest>
-  

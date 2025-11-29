@@ -24,9 +24,9 @@ export default function BottomNav() {
         >
           {({ isActive }) => (
             <div
-              className={`flex items-center justify-center transition-all duration-300 w-14 h-14 ${
+              className={`flex items-center justify-center transition-all duration-300 w-14 h-14 rounded-full ${
                 center && isActive
-                  ? "rounded-full shadow-xl bg-linear-to-r from-blue-600 to-cyan-600 border border-blue-400 dark:border-cyan-500 -translate-y-8 scale-120 text-white"
+                  ? "shadow-xl bg-linear-to-r from-blue-600 to-cyan-600 border border-blue-400 dark:border-cyan-500 -translate-y-8 scale-120 text-white"
                   : "w-14 h-14 scale-100 text-zinc-400 dark:text-zinc-500"
               } ${
                 !center && isActive ? "text-blue-600 dark:text-blue-400" : ""

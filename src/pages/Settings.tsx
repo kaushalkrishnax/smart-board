@@ -1,55 +1,79 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Server, Radio, Loader2, Palette, Code, Lightbulb } from "lucide-react";
+import {
+  Server,
+  Radio,
+  Loader2,
+  Palette,
+  Code,
+  Lightbulb,
+  Mic,
+} from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { AppConfig } from "../types";
 
 export default function Settings() {
-  const { config, saveConfig, connectSocket, theme, setTheme } = useAppStore();
+  const {
+    config,
+    saveConfig,
+    picovoiceModels,
+    connectSocket,
+    theme,
+    setTheme,
+  } = useAppStore();
 
   const [draft, setDraft] = useState<AppConfig>({
-    address: "",
+    url: "",
     token: "",
     switches: [],
+    picovoiceAccessKey: "",
+    picovoiceModel: "Jarvis",
   });
 
   const [isConnecting, setIsConnecting] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (config) {
-      setDraft({
-        address: config.address || "",
-        token: config.token || "",
-        switches: config.switches || [],
-      });
-    }
-  }, [config]);
-
-  const autoSaveLabels = useCallback(
-    (switches: typeof draft.switches) => {
+  const autoSave = useCallback(
+    (updated: AppConfig) => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
 
       debounceTimerRef.current = setTimeout(async () => {
-        if (config) {
-          await saveConfig({ ...config, switches });
-        }
+        await saveConfig(updated);
       }, 800);
     },
-    [config, saveConfig]
+    [saveConfig]
   );
 
   const updateDraft = (key: keyof AppConfig, value: any) => {
-    setDraft((prev) => ({ ...prev, [key]: value }));
+    setDraft((prev) => {
+      const updated = { ...prev, [key]: value };
+      autoSave(updated);
+      return updated;
+    });
   };
 
   const updateSwitchLabel = (index: number, value: string) => {
-    const list = [...draft.switches];
-    list[index] = { ...list[index], label: value };
-    updateDraft("switches", list);
-    autoSaveLabels(list);
+    setDraft((prev) => {
+      const list = [...prev.switches];
+      list[index] = { ...list[index], label: value };
+      const updated = { ...prev, switches: list };
+      autoSave(updated);
+      return updated;
+    });
   };
+
+  useEffect(() => {
+    if (config) {
+      setDraft({
+        url: config.url || "",
+        token: config.token || "",
+        switches: config.switches || [],
+        picovoiceAccessKey: config.picovoiceAccessKey || "",
+        picovoiceModel: config.picovoiceModel || "Jarvis",
+      });
+    }
+  }, [config]);
 
   const handleSaveAndConnect = async () => {
     setIsConnecting(true);
@@ -142,6 +166,80 @@ export default function Settings() {
 
         <section className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-lg dark:shadow-zinc-950/50 overflow-hidden">
           <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+            <div className="p-2 bg-linear-to-br from-indigo-500 to-violet-500 rounded-xl">
+              <Mic size={18} className="text-white" />
+            </div>
+            <h2 className="text-base font-semibold tracking-tight">
+              Voice Assistant
+            </h2>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+                Picovoice Access Key
+              </label>
+              <input
+                type="text"
+                value={draft.picovoiceAccessKey || ""}
+                onChange={(e) =>
+                  updateDraft("picovoiceAccessKey", e.target.value)
+                }
+                placeholder="Paste your Picovoice Access Key here"
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+              />
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-500 px-1">
+                Required for voice control. Get it free at{" "}
+                <a
+                  href="https://console.picovoice.ai/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-indigo-500"
+                >
+                  console.picovoice.ai
+                </a>
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+                Picovoice Model
+              </label>
+              <div className="relative">
+                <select
+                  value={draft.picovoiceModel || "Jarvis"}
+                  onChange={(e) =>
+                    updateDraft("picovoiceModel", e.target.value)
+                  }
+                  className="w-full appearance-none bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all cursor:pointer"
+                >
+                  {picovoiceModels.map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-lg dark:shadow-zinc-950/50 overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
             <div className="p-2 bg-linear-to-br from-blue-500 to-cyan-500 rounded-xl">
               <Code size={18} className="text-white" />
             </div>
@@ -154,12 +252,12 @@ export default function Settings() {
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
                 <Server size={14} />
-                Server Address
+                Server url
               </label>
               <input
                 type="text"
-                value={draft.address}
-                onChange={(e) => updateDraft("address", e.target.value)}
+                value={draft.url}
+                onChange={(e) => updateDraft("url", e.target.value)}
                 placeholder="ws://192.168.1.100:81"
                 className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
               />

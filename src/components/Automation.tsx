@@ -93,7 +93,6 @@ export default function Automation() {
 
       setActions(existing.actions || []);
     } else if (isNew) {
-      // Initialize for new automation
       if (config?.switches) {
         setActions(
           config.switches.map((s) => ({ id: s.id, state: "IGNORE" as any }))
@@ -136,7 +135,6 @@ export default function Automation() {
       const exists = prev.find((a) => a.id === switchId);
       const currentState = exists?.state || "IGNORE";
 
-      // Cycle: IGNORE → OFF → ON → IGNORE
       let newState: "IGNORE" | "OFF" | "ON" = "OFF";
       if (currentState === "IGNORE") newState = "OFF";
       else if (currentState === "OFF") newState = "ON";
@@ -181,7 +179,6 @@ export default function Automation() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black text-zinc-900 dark:text-zinc-50 pb-20 transition-colors duration-300 flex flex-col">
-      {/* Fixed Top Nav */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
         <button
           onClick={() => navigate(-1)}

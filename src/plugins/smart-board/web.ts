@@ -1,22 +1,39 @@
 import { WebPlugin } from "@capacitor/core";
 import type { SmartBoardPlugin } from "./index";
 
+import { AppConfig } from "../../types";
+
 export class SmartBoardWeb extends WebPlugin implements SmartBoardPlugin {
   private ws: WebSocket | null = null;
+
   private readonly STORAGE_KEY = "appSettings";
   private readonly AUTOMATION_RULES = "automation_rules";
 
-  async setConfig(options: {
-    url: string;
-    token: string;
-    switches: any[];
-  }): Promise<void> {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(options));
+  async setConfig(options: AppConfig): Promise<void> {
+    const current = await this.getConfig();
+
+    const updated = {
+      ...current,
+      ...options,
+    };
+
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
   }
 
-  async getConfig(): Promise<{ url: string; token: string; switches: any[] }> {
+  async getConfig(): Promise<AppConfig> {
     const raw = localStorage.getItem(this.STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { url: "", token: "", switches: [] };
+    const defaults = {
+      url: "",
+      token: "",
+      switches: [],
+      picovoiceAccessKey: "",
+      picovoiceModel: "Jarvis",
+    };
+
+    if (!raw) return defaults;
+
+    const parsed = JSON.parse(raw);
+    return { ...defaults, ...parsed };
   }
 
   async startWebSocket(): Promise<void> {
@@ -53,6 +70,10 @@ export class SmartBoardWeb extends WebPlugin implements SmartBoardPlugin {
     }
   }
 
+  async startAutomationService(rules: string): Promise<void> {
+    console.log("Web: Starting automation service with rules:", rules);
+  }
+
   async getAutomations(): Promise<{ rules: any[] }> {
     const raw = localStorage.getItem(this.AUTOMATION_RULES);
     return { rules: raw ? JSON.parse(raw) : [] };
@@ -62,5 +83,13 @@ export class SmartBoardWeb extends WebPlugin implements SmartBoardPlugin {
     localStorage.setItem(this.AUTOMATION_RULES, JSON.stringify(options.rules));
   }
 
-  async requestBatteryOpt(): Promise<void> {}
+  async getPicovoiceModels(): Promise<{ models: string[] }> {
+    return {
+      models: ["Alexa", "Jarvis", "Computer", "Picovoice", "Terminator"],
+    };
+  }
+
+  async requestBatteryOpt(): Promise<void> {
+    console.log("Web: Battery optimization requested (No-op)");
+  }
 }

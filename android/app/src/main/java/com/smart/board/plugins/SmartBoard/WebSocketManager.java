@@ -4,7 +4,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -24,8 +28,10 @@ public class WebSocketManager {
     private final OkHttpClient client;
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
     private WebSocket socket;
-
     private boolean isConnected = false;
+
+    private final Map<Integer, Boolean> switchStates = new ConcurrentHashMap<>();
+    private final Map<Integer, String> switchLabels = new ConcurrentHashMap<>();
 
     public WebSocketManager(SocketCallback callback) {
         this.callback = callback;
@@ -42,7 +48,6 @@ public class WebSocketManager {
         try {
             request = new Request.Builder().url(url).build();
         } catch (IllegalArgumentException e) {
-            Log.e(TAG, "Invalid URL", e);
             notifyUI("{\"type\":\"error\",\"message\":\"Invalid URL\"}");
             return;
         }
@@ -51,7 +56,6 @@ public class WebSocketManager {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
                 isConnected = true;
-
                 try {
                     JSONObject auth = new JSONObject();
                     auth.put("type", "auth");
@@ -59,7 +63,6 @@ public class WebSocketManager {
                     webSocket.send(auth.toString());
                 } catch (Exception ignored) {
                 }
-
                 notifyUI("{\"type\":\"connected\"}");
             }
 
@@ -77,7 +80,6 @@ public class WebSocketManager {
             @Override
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 isConnected = false;
-                Log.e(TAG, "WS Failure", t);
                 notifyUI("{\"type\":\"error\",\"message\":\"" + t.getMessage() + "\"}");
             }
         });
@@ -95,7 +97,6 @@ public class WebSocketManager {
 
     public void disconnect() {
         isConnected = false;
-
         if (socket != null) {
             try {
                 socket.close(1000, "Manual Close");

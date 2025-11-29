@@ -16,7 +16,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { useAppStore } from "./store/useAppStore";
 
 export default function App() {
-  const { loadData, connectSocket, theme } = useAppStore();
+  const { loadData, connectSocket, startAutomationService, theme } = useAppStore();
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -29,8 +29,9 @@ export default function App() {
   useEffect(() => {
     loadData().then(() => {
       connectSocket();
+      startAutomationService("");
     });
-  }, [loadData, connectSocket]);
+  }, [loadData, connectSocket, startAutomationService]);
 
   return (
     <BrowserRouter>

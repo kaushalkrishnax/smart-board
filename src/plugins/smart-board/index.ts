@@ -1,25 +1,19 @@
-// index.ts
 import { registerPlugin } from "@capacitor/core";
 import type { PluginListenerHandle } from "@capacitor/core";
+import { AppConfig } from "../../types";
 
 export interface SmartBoardPlugin {
   addListener(eventName: string, listenerFunc: (data: any) => void): Promise<PluginListenerHandle>;
   removeAllListeners(): Promise<void>;
-  setConfig(options: {
-    url: string;
-    token: string;
-    switches: { id: number; label: string }[];
-  }): Promise<void>;
-  getConfig(): Promise<{
-    url: string | null;
-    token: string | null;
-    switches: { id: number; label: string }[];
-  }>;
+  setConfig(options: AppConfig): Promise<void>;
+  getConfig(): Promise<AppConfig>;
   startWebSocket(): Promise<void>;
   stopWebSocket(): Promise<void>;
   sendAction(data: any): Promise<void>;
+  startAutomationService(rules: string): Promise<void>;
   getAutomations(): Promise<{ rules: any[] }>;
   setAutomations(options: { rules: any[] }): Promise<void>;
+  getPicovoiceModels(): Promise<{ models: string[] }>;
   requestBatteryOpt(): Promise<void>;
 }
 

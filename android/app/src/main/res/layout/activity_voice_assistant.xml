@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/rootLayout"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:gravity="bottom"
+>
+
+    <LinearLayout
+    android:id="@+id/bottomSheetContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_assistant"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingTop="24dp"
+    android:paddingBottom="30dp"
+    android:animateLayoutChanges="true"
+    android:elevation="40dp"
+  >
+
+        <LinearLayout
+      android:id="@+id/listWrapper"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:visibility="gone"
+      android:paddingHorizontal="20dp"
+      android:layout_marginBottom="10dp"
+    >
+            
+            <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="I couldn't catch that. Try these:"
+        android:textColor="#9AA0A6"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="12dp"
+      />
+
+            <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSwitches"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="true"
+      />
+                
+            <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1a9292ff"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+      />
+        </LinearLayout>
+
+        <FrameLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp"
+    >
+
+            <ImageView
+        android:id="@+id/glowEffect"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center"
+        android:src="@drawable/glow_gradient_cyan"
+        android:alpha="0.0"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+      />
+
+            <ImageView
+        android:id="@+id/ivMic"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:background="@drawable/circle_bg"
+        android:backgroundTint="#303134"
+        android:padding="20dp"
+        android:src="@android:drawable/ic_btn_speak_now"
+        android:tint="#FFFFFF"
+        android:elevation="2dp"
+      />
+        </FrameLayout>
+
+        <TextView
+      android:id="@+id/tvStatus"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Just a moment..."
+      android:textColor="#E8EAED"
+      android:textSize="22sp"
+      android:fontFamily="sans-serif-medium"
+    />
+            
+        <TextView
+      android:id="@+id/tvResult"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="4dp"
+      android:text=""
+      android:textColor="#8AB4F8"
+      android:textSize="16sp"
+      android:fontFamily="sans-serif"
+    />
+
+    </LinearLayout>
+</RelativeLayout>

@@ -1,12 +1,12 @@
 export interface Switch {
   id: number;
   label: string;
-  state?: 'ON' | 'OFF';
+  state?: "ON" | "OFF";
 }
 
 export interface AutomationAction {
   id: number;
-  state: 'ON' | 'OFF';
+  state: "ON" | "OFF";
 }
 
 export interface Automation {
@@ -20,12 +20,14 @@ export interface Automation {
 }
 
 export interface AppConfig {
-  address: string;
+  url: string;
   token: string;
   switches: Switch[];
+  picovoiceAccessKey: string;
+  picovoiceModel: string;
 }
 
 export interface WebSocketMessage {
-  type: 'switches' | 'connected' | 'closed' | 'error';
+  type: "switches" | "connected" | "closed" | "error";
   switches?: Switch[];
 }
