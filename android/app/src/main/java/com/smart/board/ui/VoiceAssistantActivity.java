@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,8 +49,13 @@ import org.vosk.android.StorageService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -62,9 +68,8 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
     private SoundPool soundPool;
     private int soundStartId;
 
-    private Model model;
+    private static Model model;
     private SpeechService speechService;
-    private boolean isModelLoaded = false;
     private boolean isListening = false;
 
     private TextView tvStatus, tvResult;
@@ -72,6 +77,11 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
     private LinearLayout listWrapper;
     private RecyclerView rvSwitches;
     private AnimatorSet pulseAnimator;
+
+    private final Map<String, Integer> keywordToIdMap = new HashMap<>();
+    private final SparseArray<String> idToLabelMap = new SparseArray<>();
+    private String grammarJsonString = "[]";
+    private final List<SwitchItem> cachedListItems = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,7 +97,9 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
         rvSwitches = findViewById(R.id.rvSwitches);
 
         smartBoard = new SmartBoard(this);
-        tvStatus.setText("Just a moment...");
+        tvStatus.setText("Initializing...");
+
+        parseConfigAndBuildGrammar();
 
         findViewById(R.id.rootLayout).setOnClickListener(v -> finish());
         findViewById(R.id.bottomSheetContainer).setOnClickListener(v -> {
@@ -102,7 +114,84 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
 
         setupSoundPool();
         initTTS();
-        loadVoskModelAsync();
+
+        if (model == null) {
+            loadVoskModelAsync();
+        } else {
+            new Handler(Looper.getMainLooper()).postDelayed(this::startListening, 500);
+        }
+    }
+
+    private void parseConfigAndBuildGrammar() {
+        keywordToIdMap.clear();
+        idToLabelMap.clear();
+        cachedListItems.clear();
+
+        List<String> actions = Arrays.asList(
+                "on", "off",
+                "start", "stop",
+                "enable", "disable",
+                "activate", "deactivate",
+                "turn", "switch", "power",
+                "turn on", "turn off",
+                "switch on", "switch off",
+                "power on", "power off");
+
+        List<String> numbers = Arrays.asList(
+                "one", "1", "first",
+                "two", "2", "second",
+                "three", "3", "third",
+                "four", "4", "fourth");
+
+        List<String> fillers = Arrays.asList(
+                "the", "my", "this", "that", "please", "now");
+
+        StringBuilder g = new StringBuilder("[");
+        for (String a : actions)
+            g.append("\"").append(a).append("\",");
+        for (String n : numbers)
+            g.append("\"").append(n).append("\",");
+        for (String f : fillers)
+            g.append("\"").append(f).append("\",");
+
+        try {
+            SmartBoard.Config config = smartBoard.getConfig();
+            if (config != null && config.switches != null) {
+                String jsonStr = config.switches.trim();
+                JSONArray arr = null;
+
+                if (jsonStr.startsWith("{")) {
+                    JSONObject root = new JSONObject(jsonStr);
+                    arr = root.optJSONArray("switches");
+                } else if (jsonStr.startsWith("[")) {
+                    arr = new JSONArray(jsonStr);
+                }
+
+                if (arr != null) {
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject o = arr.getJSONObject(i);
+                        int id = o.optInt("id");
+                        String label = o.optString("label", "Switch " + id);
+
+                        String clean = label.toLowerCase().replaceAll("[^a-z0-9 ]", "").trim();
+
+                        keywordToIdMap.put(clean, id);
+                        idToLabelMap.put(id, label);
+                        cachedListItems.add(new SwitchItem(id, label, false));
+
+                        for (String word : clean.split("\\s+")) {
+                            if (!word.isEmpty())
+                                g.append("\"").append(word).append("\",");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Config Parse Error", e);
+        }
+
+        g.append("\"[unk]\"]");
+        grammarJsonString = g.toString();
     }
 
     private void setupSoundPool() {
@@ -111,12 +200,7 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
         soundPool = new SoundPool.Builder().setMaxStreams(1).setAudioAttributes(attributes).build();
-
-        try {
-            soundStartId = soundPool.load(this, R.raw.listening_start, 1);
-        } catch (Exception e) {
-            Log.e(TAG, "Sound file missing");
-        }
+        soundStartId = soundPool.load(this, R.raw.listening_start, 1);
     }
 
     private void initTTS() {
@@ -137,10 +221,9 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
         executor.execute(() -> {
             try {
                 LibVosk.setLogLevel(LogLevel.INFO);
-                StorageService.unpack(this, "vosk-en-us", "model",
-                        (model) -> {
-                            this.model = model;
-                            this.isModelLoaded = true;
+                StorageService.unpack(this, "vosk-en-in", "model",
+                        (m) -> {
+                            model = m;
                             runOnUiThread(this::startListening);
                         },
                         (e) -> Log.e(TAG, "Vosk Error", e));
@@ -151,7 +234,7 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
     }
 
     private void startListening() {
-        if (!isModelLoaded || model == null)
+        if (model == null)
             return;
         if (isListening)
             return;
@@ -160,7 +243,8 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
             if (soundStartId != 0)
                 soundPool.play(soundStartId, 1f, 1f, 1, 0, 1f);
 
-            Recognizer recognizer = new Recognizer(model, 16000.0f);
+            Recognizer recognizer = new Recognizer(model, 16000.0f, grammarJsonString);
+
             speechService = new SpeechService(recognizer, 16000.0f);
             speechService.startListening(this);
             isListening = true;
@@ -198,8 +282,7 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
     @Override
     public void onResult(String hypothesis) {
         try {
-            JSONObject json = new JSONObject(hypothesis);
-            String finalText = json.optString("text", "");
+            String finalText = new JSONObject(hypothesis).optString("text", "");
             if (!finalText.isEmpty()) {
                 stopListening();
                 processCommand(finalText);
@@ -226,114 +309,142 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
     }
 
     private void processCommand(String command) {
-        String lowerCmd = command.toLowerCase().trim();
-        tvResult.setText(command);
+        if (command == null)
+            return;
+        String raw = command.trim();
+        String lower = raw.toLowerCase();
+        tvResult.setText(raw);
+
+        Set<String> tokens = new HashSet<>(Arrays.asList(lower.split("\\s+")));
+
+        String[] onWords = { "on", "start", "enable", "activate", "turn on", "switch on", "power on" };
+        String[] offWords = { "off", "stop", "disable", "deactivate", "turn off", "switch off", "power off" };
+
+        double onScore = scoreIntent(lower, tokens, onWords);
+        double offScore = scoreIntent(lower, tokens, offWords);
 
         String state = null;
-        if (lowerCmd.contains("on") || lowerCmd.contains("start"))
+        if (onScore > 0.4 || onScore > offScore)
             state = "ON";
-        else if (lowerCmd.contains("off") || lowerCmd.contains("stop"))
+        else if (offScore > 0.4)
             state = "OFF";
 
         if (state == null) {
-            speak("I didn't understand that.");
+            speak("I didn't understand the action");
             showFallbackList();
             return;
         }
 
-        int switchId = findIdByLabel(lowerCmd);
-        if (switchId != -1) {
-            String switchName = getSwitchName(switchId);
-            sendAction(switchId, state);
-            speak("Turned " + state.toLowerCase() + " " + switchName);
-            new Handler(Looper.getMainLooper()).postDelayed(this::finish, 2000);
-        } else {
-            speak("I couldn't find that device.");
-            showFallbackList();
+        SparseArray<String> labels = idToLabelMap;
+        double bestScore = 0;
+        int bestId = -1;
+
+        Map<Integer, List<String>> numberMap = new HashMap<>();
+        numberMap.put(1, Arrays.asList("one", "1", "first"));
+        numberMap.put(2, Arrays.asList("two", "2", "second"));
+        numberMap.put(3, Arrays.asList("three", "3", "third"));
+        numberMap.put(4, Arrays.asList("four", "4", "fourth"));
+
+        for (Map.Entry<Integer, List<String>> e : numberMap.entrySet()) {
+            double s = scoreDevice(lower, tokens, e.getValue());
+            if (s > bestScore) {
+                bestScore = s;
+                bestId = e.getKey();
+            }
         }
+
+        for (int i = 0; i < labels.size(); i++) {
+            int key = labels.keyAt(i);
+            String label = labels.valueAt(i).toLowerCase();
+            List<String> parts = Arrays.asList(label.split(" "));
+            double s = scoreDevice(lower, tokens, parts);
+            if (s > bestScore) {
+                bestScore = s;
+                bestId = key;
+            }
+        }
+
+        if (bestId == -1 || bestScore < 0.35) {
+            speak("I couldn't find that device");
+            showFallbackList();
+            return;
+        }
+
+        String device = labels.get(bestId);
+        sendAction(bestId, state);
+        speak("Turned " + state.toLowerCase() + " " + device);
+        new Handler(Looper.getMainLooper()).postDelayed(this::finish, 1500);
+    }
+
+    private double scoreIntent(String raw, Set<String> tokens, String[] list) {
+        double s = 0;
+        for (String w : list) {
+            if (w.contains(" ")) {
+                if (raw.contains(w))
+                    s += 0.9;
+            } else {
+                if (tokens.contains(w))
+                    s += 0.7;
+            }
+            for (String t : tokens) {
+                if (fuzzy(t, w))
+                    s += 0.3;
+            }
+        }
+        return Math.min(1, s);
+    }
+
+    private double scoreDevice(String raw, Set<String> tokens, List<String> words) {
+        double s = 0;
+        for (String w : words) {
+            if (raw.contains(w))
+                s += 0.7;
+            if (tokens.contains(w))
+                s += 0.7;
+            for (String t : tokens) {
+                if (fuzzy(t, w))
+                    s += 0.3;
+            }
+        }
+        return Math.min(1, s);
+    }
+
+    private boolean fuzzy(String a, String b) {
+        int d = dist(a, b);
+        if (b.length() <= 3)
+            return d <= 1;
+        if (b.length() <= 6)
+            return d <= 2;
+        return d <= 3;
+    }
+
+    private int dist(String a, String b) {
+        int[][] dp = new int[a.length() + 1][b.length() + 1];
+        for (int i = 0; i <= a.length(); i++)
+            dp[i][0] = i;
+        for (int j = 0; j <= b.length(); j++)
+            dp[0][j] = j;
+
+        for (int i = 1; i <= a.length(); i++) {
+            for (int j = 1; j <= b.length(); j++) {
+                if (a.charAt(i - 1) == b.charAt(j - 1))
+                    dp[i][j] = dp[i - 1][j - 1];
+                else
+                    dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
+            }
+        }
+        return dp[a.length()][b.length()];
     }
 
     private void showFallbackList() {
-        tvStatus.setText("Tap an option above");
-        setupSwitchList();
+        tvStatus.setText("Tap an option below");
+        rvSwitches.setLayoutManager(new LinearLayoutManager(this));
+        rvSwitches.setAdapter(new SwitchAdapter(cachedListItems));
         listWrapper.setVisibility(View.VISIBLE);
     }
 
-    private void setupSwitchList() {
-        rvSwitches.setLayoutManager(new LinearLayoutManager(this));
-        List<SwitchItem> items = new ArrayList<>();
-
-        try {
-            SmartBoard.Config config = smartBoard.getConfig();
-
-            if (config != null && config.switches != null) {
-                String jsonStr = config.switches.trim();
-                JSONArray array = null;
-
-                if (jsonStr.startsWith("{")) {
-                    JSONObject root = new JSONObject(jsonStr);
-                    if (root.has("switches")) {
-                        array = root.getJSONArray("switches");
-                    }
-                } else if (jsonStr.startsWith("[")) {
-                    array = new JSONArray(jsonStr);
-                }
-
-                if (array != null) {
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject obj = array.getJSONObject(i);
-                        items.add(new SwitchItem(
-                                obj.optInt("id"),
-                                obj.optString("label", "Switch " + obj.optInt("id")),
-                                false // <--- FORCED OFF (Static)
-                        ));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "List Error", e);
-        }
-
-        rvSwitches.setAdapter(new SwitchAdapter(items));
-    }
-
-    private String getSwitchName(int id) {
-        try {
-            JSONArray switches = new JSONArray(smartBoard.getConfig().switches);
-            for (int i = 0; i < switches.length(); i++) {
-                if (switches.getJSONObject(i).optInt("id") == id)
-                    return switches.getJSONObject(i).optString("label", "switch");
-            }
-        } catch (Exception e) {
-        }
-        return "the device";
-    }
-
-    private int findIdByLabel(String command) {
-        if (command.contains("one") || command.contains(" 1"))
-            return 1;
-        if (command.contains("two") || command.contains(" 2"))
-            return 2;
-        if (command.contains("three") || command.contains(" 3"))
-            return 3;
-        if (command.contains("four") || command.contains(" 4"))
-            return 4;
-
-        try {
-            JSONArray switches = new JSONArray(smartBoard.getConfig().switches);
-            for (int i = 0; i < switches.length(); i++) {
-                String label = switches.getJSONObject(i).optString("label", "").toLowerCase();
-                if (!label.isEmpty() && command.contains(label))
-                    return switches.getJSONObject(i).optInt("id", -1);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error finding switch", e);
-        }
-        return -1;
-    }
-
     private void sendAction(int id, String state) {
-        String payload = String.format("{\"type\":\"toggle\",\"id\":%d,\"state\":\"%s\"}", id, state);
+        String payload = "{\"type\":\"toggle\",\"id\":" + id + ",\"state\":\"" + state + "\"}";
         smartBoard.sendAction(payload);
     }
 
@@ -375,6 +486,30 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
         glowEffect.setScaleY(1.0f);
     }
 
+    private void unlockScreen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+            KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            if (km != null)
+                km.requestDismissKeyguard(this, null);
+        } else {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopListening();
+        if (tts != null)
+            tts.shutdown();
+        if (soundPool != null)
+            soundPool.release();
+    }
+
     private static class SwitchItem {
         int id;
         String label;
@@ -409,6 +544,7 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
             h.toggle.setOnCheckedChangeListener((b, c) -> {
                 sendAction(item.id, c ? "ON" : "OFF");
                 stopListening();
+                new Handler(Looper.getMainLooper()).postDelayed(() -> finish(), 500);
             });
         }
 
@@ -427,31 +563,5 @@ public class VoiceAssistantActivity extends Activity implements RecognitionListe
                 toggle = v.findViewById(R.id.swToggle);
             }
         }
-    }
-
-    private void unlockScreen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true);
-            setTurnScreenOn(true);
-            KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
-            if (km != null)
-                km.requestDismissKeyguard(this, null);
-        } else {
-            getWindow().addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-                            | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopListening();
-        if (model != null)
-            model.close();
-        if (tts != null)
-            tts.shutdown();
-        if (soundPool != null)
-            soundPool.release();
     }
 }

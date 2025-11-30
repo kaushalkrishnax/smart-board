@@ -29,7 +29,7 @@ export default function App() {
   useEffect(() => {
     loadData().then(() => {
       connectSocket();
-      startAutomationService("");
+      startAutomationService([]);
     });
   }, [loadData, connectSocket, startAutomationService]);
 

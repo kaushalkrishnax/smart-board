@@ -39,7 +39,7 @@ export default function Home() {
   const activeCount = switches.filter((s) => s.state === "ON").length;
   const totalCount = switches.length;
 
-  const hasConfig = Boolean(config && config.address);
+  const hasConfig = Boolean(config && config.url);
   const showOfflineState = !isLoading && !isConnected;
 
   return (

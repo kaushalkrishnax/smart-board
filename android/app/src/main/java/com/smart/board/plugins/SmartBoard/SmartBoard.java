@@ -27,8 +27,7 @@ public class SmartBoard {
     private static final String KEY_TOKEN = "ws_token";
     private static final String KEY_SWITCHES = "switches";
     private static final String AUTOMATION_RULES = "automation_rules";
-    private static final String KEY_PICOVOICE_ACCESS_KEY = "picovoice_access_key";
-    private static final String KEY_PICOVOICE_MODEL = "picovoice_model";
+    private static final String KEY_OPENWAKEWORD_MODEL = "owwModel";
 
     private final Context context;
     private final WebSocketManager wsManager;
@@ -96,7 +95,7 @@ public class SmartBoard {
         context.stopService(serviceIntent);
     }
 
-    public void setConfig(String url, String token, String switches, String accessKey, String model ) {
+    public void setConfig(String url, String token, String switches, String model) {
         SharedPreferences.Editor editor = getPrefs().edit();
 
         if (url != null)
@@ -105,11 +104,8 @@ public class SmartBoard {
             editor.putString(KEY_TOKEN, token);
         if (switches != null)
             editor.putString(KEY_SWITCHES, switches);
-
-        if (accessKey != null)
-            editor.putString(KEY_PICOVOICE_ACCESS_KEY, accessKey);
         if (model != null)
-            editor.putString(KEY_PICOVOICE_MODEL, model);
+            editor.putString(KEY_OPENWAKEWORD_MODEL, model);
 
         editor.apply();
 
@@ -128,8 +124,7 @@ public class SmartBoard {
                 prefs.getString(KEY_URL, ""),
                 prefs.getString(KEY_TOKEN, ""),
                 prefs.getString(KEY_SWITCHES, "[]"),
-                prefs.getString(KEY_PICOVOICE_ACCESS_KEY, ""),
-                prefs.getString(KEY_PICOVOICE_MODEL, "Jarvis"));
+                prefs.getString(KEY_OPENWAKEWORD_MODEL, "alexa"));
     }
 
     public String getAutomations() {
@@ -138,6 +133,14 @@ public class SmartBoard {
 
     public void updateAutomations(String jsonRules) {
         getPrefs().edit().putString(AUTOMATION_RULES, jsonRules).apply();
+
+        Intent intent = new Intent(context, AutomationService.class);
+        intent.putExtra("automation_rules", jsonRules);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
     }
 
     private SharedPreferences getPrefs() {
@@ -156,17 +159,15 @@ public class SmartBoard {
         }
     }
 
-    public List<String> getPicovoiceModels() {
+    public List<String> getOwwModels() {
         List<String> models = new ArrayList<>();
         AssetManager assets = context.getAssets();
         try {
-            String[] files = assets.list("picovoice_models");
+            String[] files = assets.list("oww/models");
             if (files != null) {
                 for (String file : files) {
-                    if (file.endsWith(".ppn")) {
-                        String model = file.replace("_android.ppn", "").replace("_", " ");
-                        if (model.length() > 0)
-                            model = model.substring(0, 1).toUpperCase(Locale.ROOT) + model.substring(1);
+                    if (file.endsWith(".tflite")) {
+                        String model = file.substring(0, file.length() - 7);
                         models.add(model);
                     }
                 }
@@ -181,15 +182,13 @@ public class SmartBoard {
         public final String url;
         public final String token;
         public final String switches;
-        public final String picovoiceAccessKey;
-        public final String picovoiceModel;
+        public final String owwModel;
 
-        public Config(String url, String token, String switches, String picovoiceAccessKey, String picovoiceModel) {
+        public Config(String url, String token, String switches, String owwModel) {
             this.url = url;
             this.token = token;
             this.switches = switches;
-            this.picovoiceAccessKey = picovoiceAccessKey;
-            this.picovoiceModel = picovoiceModel;
+            this.owwModel = owwModel;
         }
     }
 }

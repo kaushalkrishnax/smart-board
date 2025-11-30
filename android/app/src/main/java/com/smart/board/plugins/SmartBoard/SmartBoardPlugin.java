@@ -35,10 +35,9 @@ public class SmartBoardPlugin extends Plugin {
         String token = call.getString("token");
         JSArray switches = call.getArray("switches", new JSArray());
 
-        String picovoiceAccessKey = call.getString("picovoiceAccessKey");
-        String picovoiceModel = call.getString("picovoiceModel");
+        String owwModel = call.getString("owwModel");
 
-        implementation.setConfig(url, token, switches.toString(), picovoiceAccessKey, picovoiceModel);
+        implementation.setConfig(url, token, switches.toString(), owwModel);
         call.resolve();
     }
 
@@ -54,9 +53,7 @@ public class SmartBoardPlugin extends Plugin {
         } catch (Exception e) {
             ret.put("switches", new JSArray());
         }
-
-        ret.put("picovoiceAccessKey", config.picovoiceAccessKey);
-        ret.put("picovoiceModel", config.picovoiceModel);
+        ret.put("owwModel", config.owwModel);
 
         call.resolve(ret);
     }
@@ -119,8 +116,8 @@ public class SmartBoardPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void getPicovoiceModels(PluginCall call) {
-        List<String> models = implementation.getPicovoiceModels();
+    public void getOwwModels(PluginCall call) {
+        List<String> models = implementation.getOwwModels();
         JSObject ret = new JSObject();
         JSArray jsonArray = new JSArray();
         

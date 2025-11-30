@@ -23,8 +23,7 @@ export interface AppConfig {
   url: string;
   token: string;
   switches: Switch[];
-  picovoiceAccessKey: string;
-  picovoiceModel: string;
+  owwModel: string;
 }
 
 export interface WebSocketMessage {

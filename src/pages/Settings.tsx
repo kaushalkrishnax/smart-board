@@ -12,21 +12,14 @@ import { useAppStore } from "../store/useAppStore";
 import { AppConfig } from "../types";
 
 export default function Settings() {
-  const {
-    config,
-    saveConfig,
-    picovoiceModels,
-    connectSocket,
-    theme,
-    setTheme,
-  } = useAppStore();
+  const { config, saveConfig, owwModels, connectSocket, theme, setTheme } =
+    useAppStore();
 
   const [draft, setDraft] = useState<AppConfig>({
     url: "",
     token: "",
     switches: [],
-    picovoiceAccessKey: "",
-    picovoiceModel: "Jarvis",
+    owwModel: "alexa",
   });
 
   const [isConnecting, setIsConnecting] = useState(false);
@@ -63,14 +56,20 @@ export default function Settings() {
     });
   };
 
+  const formatModelName = (model: string) => {
+    return model
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  };
+
   useEffect(() => {
     if (config) {
       setDraft({
         url: config.url || "",
         token: config.token || "",
         switches: config.switches || [],
-        picovoiceAccessKey: config.picovoiceAccessKey || "",
-        picovoiceModel: config.picovoiceModel || "Jarvis",
+        owwModel: config.owwModel || "alexa",
       });
     }
   }, [config]);
@@ -176,46 +175,18 @@ export default function Settings() {
 
           <div className="p-5 space-y-4">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
-                Picovoice Access Key
-              </label>
-              <input
-                type="text"
-                value={draft.picovoiceAccessKey || ""}
-                onChange={(e) =>
-                  updateDraft("picovoiceAccessKey", e.target.value)
-                }
-                placeholder="Paste your Picovoice Access Key here"
-                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
-              />
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-500 px-1">
-                Required for voice control. Get it free at{" "}
-                <a
-                  href="https://console.picovoice.ai/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline hover:text-indigo-500"
-                >
-                  console.picovoice.ai
-                </a>
-              </p>
-            </div>
-
-            <div className="space-y-2">
               <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
-                Picovoice Model
+                Open Wake Word Model
               </label>
               <div className="relative">
                 <select
-                  value={draft.picovoiceModel || "Jarvis"}
-                  onChange={(e) =>
-                    updateDraft("picovoiceModel", e.target.value)
-                  }
+                  value={draft.owwModel || "alexa"}
+                  onChange={(e) => updateDraft("owwModel", e.target.value)}
                   className="w-full appearance-none bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all cursor:pointer"
                 >
-                  {picovoiceModels.map((model) => (
+                  {owwModels.map((model) => (
                     <option key={model} value={model}>
-                      {model}
+                      {formatModelName(model)}
                     </option>
                   ))}
                 </select>

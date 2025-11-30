@@ -26,8 +26,7 @@ export class SmartBoardWeb extends WebPlugin implements SmartBoardPlugin {
       url: "",
       token: "",
       switches: [],
-      picovoiceAccessKey: "",
-      picovoiceModel: "Jarvis",
+      openwakewordModel: "alexa",
     };
 
     if (!raw) return defaults;
@@ -70,7 +69,7 @@ export class SmartBoardWeb extends WebPlugin implements SmartBoardPlugin {
     }
   }
 
-  async startAutomationService(rules: string): Promise<void> {
+  async startAutomationService({ rules }: { rules: any[] }): Promise<void> {
     console.log("Web: Starting automation service with rules:", rules);
   }
 
@@ -83,9 +82,16 @@ export class SmartBoardWeb extends WebPlugin implements SmartBoardPlugin {
     localStorage.setItem(this.AUTOMATION_RULES, JSON.stringify(options.rules));
   }
 
-  async getPicovoiceModels(): Promise<{ models: string[] }> {
+  async getOpenwakewordModels(): Promise<{ models: string[] }> {
     return {
-      models: ["Alexa", "Jarvis", "Computer", "Picovoice", "Terminator"],
+      models: [
+        "alexa",
+        "hey_jarvis",
+        "hey_mycroft",
+        "hey_rhasspy",
+        "timer",
+        "weather",
+      ],
     };
   }
 

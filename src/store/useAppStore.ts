@@ -6,7 +6,7 @@ interface AppState {
   config: AppConfig | null;
   automations: Automation[];
   switches: Switch[];
-  picovoiceModels: string[];
+  owwModels: string[];
   isConnected: boolean;
   isLoaded: boolean;
   hasTriedConnect: boolean;
@@ -16,7 +16,7 @@ interface AppState {
   saveConfig: (config: AppConfig) => Promise<void>;
   toggleSwitch: (id: number, currentState: string) => Promise<void>;
   setAllSwitches: (targetState: "ON" | "OFF") => Promise<void>;
-  startAutomationService: (rules: string) => Promise<void>;
+  startAutomationService: (rules: any[]) => Promise<void>;
   toggleAutomation: (id: string) => Promise<void>;
   updateAutomation: (automation: Automation) => Promise<void>;
   addAutomation: (automation: Automation) => Promise<void>;
@@ -34,8 +34,7 @@ const DEFAULT_CONFIG: AppConfig = {
     { id: 1, label: "Fan" },
     { id: 2, label: "Light Bulb" },
   ],
-  picovoiceAccessKey: "",
-  picovoiceModel: "Jarvis",
+  owwModel: "jarvis",
 };
 
 const DEFAULT_AUTOMATIONS: Automation[] = [
@@ -65,7 +64,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   config: null,
   automations: [],
   switches: [],
-  picovoiceModels: [],
+  owwModels: [],
   isConnected: false,
   isLoaded: false,
   hasTriedConnect: false,
@@ -74,7 +73,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadData: async () => {
     try {
       const storedConfig = await SmartBoard.getConfig();
-      const picovoiceModels = await SmartBoard.getPicovoiceModels().then(
+      const owwModels = await SmartBoard.getOwwModels().then(
         (res) => res.models
       );
       let safeSwitches: any = storedConfig.switches;
@@ -97,8 +96,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           safeSwitches && safeSwitches.length
             ? safeSwitches
             : DEFAULT_CONFIG.switches,
-        picovoiceAccessKey: storedConfig.picovoiceAccessKey || "",
-        picovoiceModel: storedConfig.picovoiceModel || "Jarvis",
+        owwModel: storedConfig.owwModel || "jarvis",
       };
 
       const storedAuto = await SmartBoard.getAutomations();
@@ -125,7 +123,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({
         config,
         automations,
-        picovoiceModels,
+        owwModels,
         isLoaded: true,
         switches: [],
       });
@@ -148,8 +146,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         url: newConfig.url,
         token: newConfig.token,
         switches: newConfig.switches,
-        picovoiceAccessKey: newConfig.picovoiceAccessKey,
-        picovoiceModel: newConfig.picovoiceModel,
+        owwModel: newConfig.owwModel,
       });
 
       if (currentSwitches.length > 0) {
@@ -229,7 +226,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   startAutomationService: async (rules) => {
     try {
-      await SmartBoard.startAutomationService(rules);
+      await SmartBoard.startAutomationService({ rules });
     } catch (e) {
       console.error("Failed to start automation service", e);
     }
