@@ -13,14 +13,14 @@ A powerful, cross-platform smart home control system built with React, Capacitor
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Android Integration](#android-integration)
-- [Hardware Setup](#hardware-setup)
-- [API Documentation](#api-documentation)
+- [Overview](#-overview)
+- [Tech Stack](#-tech-stack)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Android Integration](#-android-integration)
+- [Hardware Setup](#-hardware-setup)
+- [API Documentation](#-api-documentation)
 
 ---
 
