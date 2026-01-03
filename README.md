@@ -14,28 +14,23 @@ A powerful, cross-platform smart home control system built with React, Capacitor
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Features](#features)
-- [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Android Integration](#android-integration)
 - [Hardware Setup](#hardware-setup)
-- [Development](#development)
-- [Building](#building)
 - [API Documentation](#api-documentation)
 
 ---
 
 ## 🎯 Overview
 
-Smart Board is a comprehensive IoT home automation system that allows you to control smart devices (switches, lights, appliances) through a beautiful mobile app. It features:
+Smart Board is a comprehensive IoT home automation system that allows you to control electronic devices through a mobile app. It features:
 
 - **Real-time Control**: Instant device control via WebSocket communication
 - **Voice Activation**: Wake word detection using TensorFlow Lite (OpenWakeWord)
 - **Automation Rules**: Trigger-based automation (shake phone, proximity, face up/down)
-- **Cross-Platform**: Works on web, Android, and iOS
 - **Hardware Integration**: ESP32 or C++ server backend
 - **Modern UI**: Beautiful, responsive design with dark mode
 
@@ -46,91 +41,17 @@ The system consists of three main components:
 
 ---
 
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Mobile App (React)                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │     Home     │  │ Automations  │  │   Settings   │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│           │                │                  │              │
-│           └────────────────┴──────────────────┘              │
-│                            │                                 │
-│                   ┌────────▼────────┐                        │
-│                   │  Zustand Store  │                        │
-│                   └────────┬────────┘                        │
-│                            │                                 │
-│           ┌────────────────┴────────────────┐                │
-│           │                                 │                │
-│    ┌──────▼──────┐                   ┌─────▼──────┐         │
-│    │ SmartBoard  │                   │ WebSocket  │         │
-│    │   Plugin    │                   │  Manager   │         │
-│    └──────┬──────┘                   └─────┬──────┘         │
-└───────────┼──────────────────────────────────┼──────────────┘
-            │                                  │
-            │ Capacitor Bridge                 │
-            │                                  │
-┌───────────▼──────────────────────────────────▼──────────────┐
-│              Android Native Layer (Java)                     │
-│  ┌──────────────┐  ┌───────────────┐  ┌──────────────┐     │
-│  │ SmartBoard   │  │  Automation   │  │     OWW      │     │
-│  │   Plugin     │  │    Service    │  │   Service    │     │
-│  └──────┬───────┘  └───────┬───────┘  └──────┬───────┘     │
-│         │                  │                  │              │
-│  ┌──────▼──────┐    ┌──────▼──────┐   ┌──────▼──────┐      │
-│  │  WebSocket  │    │   Sensors   │   │  TFLite     │      │
-│  │   Manager   │    │  (Accel,    │   │  (Wake      │      │
-│  │             │    │  Proximity)  │   │   Word)     │      │
-│  └──────┬──────┘    └──────┬──────┘   └──────┬──────┘      │
-└─────────┼──────────────────┼──────────────────┼─────────────┘
-          │                  │                  │
-          │                  │                  │
-          └──────────────────┴──────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  WebSocket (WS) │
-                    │    Protocol     │
-                    └────────┬────────┘
-                             │
-          ┌──────────────────┴──────────────────┐
-          │                                     │
-    ┌─────▼──────┐                    ┌────────▼────────┐
-    │    ESP32   │                    │  C++ WebSocket  │
-    │   Server   │                    │     Server      │
-    │            │                    │                 │
-    │  ┌──────┐  │                    │  ┌──────────┐  │
-    │  │Relays│  │                    │  │  Boost   │  │
-    │  │GPIO  │  │                    │  │  Beast   │  │
-    │  └──────┘  │                    │  └──────────┘  │
-    └─────┬──────┘                    └────────┬────────┘
-          │                                    │
-    ┌─────▼──────┐                    ┌────────▼────────┐
-    │  Physical  │                    │   Hardware      │
-    │  Switches  │                    │   Interface     │
-    │  (Relays)  │                    │   (GPIO/etc)    │
-    └────────────┘                    └─────────────────┘
-```
-
----
-
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 19.1.1** - UI library with React Compiler for performance
+- **React 19** - UI library with React Compiler for performance
 - **TypeScript** - Type-safe development
-- **Vite 7.1.7** - Lightning-fast build tool
-- **Tailwind CSS 4.1.16** - Utility-first CSS framework
-- **Zustand 5.0.8** - Lightweight state management
-- **React Router 7.9.5** - Client-side routing
-- **Lucide React** - Beautiful icon library
-- **Vite PWA** - Progressive Web App support
+- **Vite** - Lightning-fast build tool
+- **Tailwind CSS v4** - Utility-first CSS framework
+- **Zustand** - Lightweight state management
 
 ### Mobile Framework
-- **Capacitor 7.4.4** - Cross-platform native runtime
-- **@capacitor/android** - Android platform integration
-- **@capacitor/app** - App lifecycle management
-- **@capacitor/splash-screen** - Native splash screen
+- **Capacitor 7** - Cross-platform native runtime
 
 ### Android Native
 - **Java** - Native Android development
@@ -150,11 +71,6 @@ The system consists of three main components:
   - High-performance WebSocket server
   - Cross-platform
   - JSON processing with nlohmann/json
-
-### Development Tools
-- **ESLint 9.36.0** - Code linting
-- **Babel React Compiler** - Automatic optimization
-- **Capacitor CLI** - Native project management
 
 ---
 
@@ -190,84 +106,6 @@ The system consists of three main components:
 - **Battery Optimization**: Request background permission
 - **Wake Lock**: Keep automation service alive
 - **Custom Plugin**: Bridge between React and Android native code
-
-### 🔐 Security
-- **Token Authentication**: Secure WebSocket connections
-- **Local Storage**: Encrypted configuration storage
-- **Network Validation**: URL and connection verification
-
----
-
-## 📁 Project Structure
-
-```
-smart-board/
-├── src/                          # React application source
-│   ├── components/               # Reusable UI components
-│   │   ├── Automation.tsx        # Automation editor component
-│   │   ├── AutomationCard.tsx    # Automation list card
-│   │   ├── BottomNav.tsx         # Bottom navigation bar
-│   │   └── SwitchCard.tsx        # Switch control card
-│   ├── pages/                    # Page components
-│   │   ├── Home.tsx              # Main control dashboard
-│   │   ├── Automations.tsx       # Automation management page
-│   │   └── Settings.tsx          # Configuration page
-│   ├── plugins/                  # Capacitor plugins
-│   │   └── smart-board/
-│   │       ├── index.ts          # Plugin interface definition
-│   │       └── web.ts            # Web implementation (fallback)
-│   ├── store/                    # State management
-│   │   └── useAppStore.ts        # Zustand store with app state
-│   ├── types/                    # TypeScript type definitions
-│   │   └── index.ts              # App-wide interfaces
-│   ├── App.tsx                   # Root component with routing
-│   ├── main.tsx                  # Application entry point
-│   └── index.css                 # Global styles
-│
-├── android/                      # Android native project
-│   ├── app/
-│   │   ├── src/main/java/com/smart/board/
-│   │   │   ├── MainActivity.java           # Main activity
-│   │   │   ├── plugins/smartboard/
-│   │   │   │   ├── SmartBoard.java         # Plugin implementation
-│   │   │   │   ├── SmartBoardPlugin.java   # Capacitor plugin bridge
-│   │   │   │   └── WebSocketManager.java   # WebSocket client
-│   │   │   ├── services/
-│   │   │   │   ├── AutomationService.java  # Background automation
-│   │   │   │   └── OwwService.java         # Wake word detection
-│   │   │   └── ui/
-│   │   │       └── VoiceAssistantActivity.java  # Voice UI
-│   │   ├── assets/oww/           # TensorFlow Lite models
-│   │   │   ├── melspectrogram.tflite
-│   │   │   ├── embedding_model.tflite
-│   │   │   └── models/
-│   │   │       ├── alexa.tflite
-│   │   │       ├── hey_jarvis.tflite
-│   │   │       └── ...
-│   │   └── build.gradle          # Android app build config
-│   ├── build.gradle              # Project-level Gradle config
-│   └── capacitor.settings.gradle # Capacitor configuration
-│
-├── cpp/                          # C++ WebSocket server (optional)
-│   ├── ws_server.cpp             # Boost.Beast WebSocket server
-│   └── switches.json             # Switch state persistence
-│
-├── esp32/                        # ESP32 firmware (optional)
-│   └── smartBoardSketch.ino      # Arduino sketch for ESP32
-│
-├── public/                       # Static assets
-│   ├── manifest.json             # PWA manifest
-│   └── site.webmanifest          # Web manifest
-│
-├── icons/                        # App icons and splash screens
-│
-├── capacitor.config.json         # Capacitor configuration
-├── vite.config.js                # Vite build configuration
-├── package.json                  # Node.js dependencies
-├── tsconfig.json                 # TypeScript configuration
-└── README.md                     # This file
-```
-
 ---
 
 ## 🚀 Installation
@@ -297,8 +135,7 @@ npm install
 # Start Vite dev server
 bun run dev
 
-# Access at http://localhost:5173
-```
+# Access at http://localhost:5173```
 
 ### Step 3: Build for Production
 
@@ -341,26 +178,6 @@ interface Switch {
   id: number;          // Unique switch ID
   label: string;       // Display name
   state?: "ON" | "OFF"; // Current state (from server)
-}
-```
-
-### Capacitor Configuration
-
-`capacitor.config.json`:
-```json
-{
-  "appId": "com.smart.board",
-  "appName": "Smart Board",
-  "webDir": "dist",
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 1000,
-      "backgroundColor": "#0a0a0a",
-      "showSpinner": false,
-      "splashFullScreen": true,
-      "splashImmersive": true
-    }
-  }
 }
 ```
 
@@ -558,31 +375,6 @@ Note: Buttons use INPUT_PULLUP, connect one side to GPIO and other to GND
 - State changes broadcast to all WebSocket clients
 - Works independently of app connection
 
-**Upload Firmware**:
-```bash
-# Using Arduino IDE
-1. Install ESP32 board support:
-   - File → Preferences → Additional Board Manager URLs
-   - Add: https://dl.espressif.com/dl/package_esp32_index.json
-   - Tools → Board → Boards Manager → Search "ESP32" → Install
-
-2. Install required libraries:
-   - Tools → Manage Libraries
-   - Install: ArduinoJson (by Benoit Blanchon)
-   - Install: WebSockets (by Markus Sattler)
-   - WiFi library is built-in for ESP32
-
-3. Configure and upload:
-   - Open smartBoardSketch.ino
-   - Tools → Board → "ESP32 Dev Module"
-   - Tools → Port → Select your ESP32 port
-   - Click Upload
-
-4. Monitor serial output:
-   - Tools → Serial Monitor (115200 baud)
-   - Note the Access Point IP (usually 192.168.4.1)
-```
-
 **First Time Setup**:
 1. Upload firmware to ESP32
 2. Power on the ESP32
@@ -621,131 +413,6 @@ g++ -std=c++17 ws_server.cpp -o ws_server \
 - JSON state persistence
 - Multi-client support
 - Broadcast to all connected clients
-
----
-
-## 🛠️ Development
-
-### Running the App
-
-```bash
-# Web development
-bun run dev
-
-# Android with live reload
-bunx cap run android --livereload --external
-
-# Build and sync
-bun run build && bunx cap sync
-```
-
-### Adding a New Automation Trigger
-
-1. **Define in TypeScript** (`src/types/index.ts`):
-```typescript
-trigger: "shake" | "faceup" | "facedown" | "proximity" | "newTrigger"
-```
-
-2. **Add UI** (`src/components/Automation.tsx`):
-```tsx
-<option value="newTrigger">New Trigger</option>
-```
-
-3. **Implement in Android** (`AutomationService.java`):
-```java
-private void initNewTriggerSensor() {
-  // Register sensor listener
-}
-
-private void checkNewTrigger() {
-  // Trigger logic
-  triggerAutomationsWithTrigger("newTrigger");
-}
-```
-
-### Adding a New Wake Word Model
-
-1. **Add TFLite Model**: Place in `android/app/src/main/assets/oww/models/my_word.tflite`
-
-2. **Update List** (`SmartBoard.java`):
-```java
-public List<String> getOwwModels() {
-  return Arrays.asList("alexa", "hey_jarvis", ..., "my_word");
-}
-```
-
-3. **Select in Settings**: Model appears in dropdown automatically
-
-### Debugging
-
-**Android Logs**:
-```bash
-# Filter by tag
-adb logcat | grep "SmartBoard"
-adb logcat | grep "WSManager"
-adb logcat | grep "AutomationService"
-adb logcat | grep "OWW"
-
-# View full logs
-adb logcat
-```
-
-**React DevTools**:
-- Install browser extension
-- Inspect component state
-- Monitor Zustand store updates
-
-**WebSocket Traffic**:
-```javascript
-// Enable in SmartBoardPlugin
-console.log("WS Send:", json);
-console.log("WS Receive:", text);
-```
-
----
-
-## 📦 Building
-
-### Android APK
-
-```bash
-# Debug build
-cd android
-./gradlew assembleDebug
-# Output: android/app/build/outputs/apk/debug/app-debug.apk
-
-# Release build (requires signing)
-./gradlew assembleRelease
-# Output: android/app/build/outputs/apk/release/app-release.apk
-```
-
-### Android App Bundle (AAB)
-
-```bash
-cd android
-./gradlew bundleRelease
-# Output: android/app/build/outputs/bundle/release/app-release.aab
-```
-
-### Release Signing
-
-Create `release-key.jks`:
-```bash
-keytool -genkey -v -keystore release-key.jks -keyalg RSA \
-  -keysize 2048 -validity 10000 -alias smart-board
-```
-
-Set environment variables:
-```bash
-export KEY_ALIAS=smart-board
-export KEYSTORE_PASSWORD=your_password
-export KEY_PASSWORD=your_password
-```
-
-Build:
-```bash
-./gradlew assembleRelease
-```
 
 ---
 
@@ -866,16 +533,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-## 🙏 Acknowledgments
-
-- **OpenWakeWord** - On-device wake word detection
-- **Capacitor** - Cross-platform native runtime
-- **TensorFlow Lite** - Mobile ML inference
-- **Boost.Beast** - C++ WebSocket library
-- **ESP32 Community** - Arduino libraries and examples
-
----
-
 ## 📞 Support
 
 For issues, questions, or suggestions:
@@ -886,155 +543,3 @@ For issues, questions, or suggestions:
 ---
 
 **Made with ❤️ by Kaushal Krishna**
-
-Smart Board is a small React (Vite) + Capacitor application that lets you control a set of remote "switches" in real time over a WebSocket connection. The app is designed to run in the browser and on Android devices.
-
-## Key features
-
-- Real-time control of switches via WebSocket.
-- Simple, mobile-first UI built with React and Tailwind.
-- Works as a web app and as a Capacitor-wrapped Android app.
-- Small, extensible WebSocket protocol (auth, toggle, all, switches updates).
-
-## Tech stack
-
-- Frontend: React 19, Vite, TailwindCSS
-- Mobile wrapper: Capacitor
-- PWA support via `vite-plugin-pwa`
-- Tooling: ESLint
-
-## Quick start (development)
-
-Prerequisites:
-
-- Node.js (22+ recommended) and bun
-- Android Studio (for building/running on Android)
-
-Install dependencies:
-
-```bash
-bun install
-```
-
-Run the dev server (hot reload):
-
-```bash
-bun run dev
-```
-
-Open http://localhost:5173 in your browser (Vite will print the exact URL).
-
-Notes:
-
-- The app's React entry is `src/main.jsx`. The router exposes two pages: `Home` (main control surface) and `Settings` (where you set WebSocket address and token).
-- The Socket connection details (address + token) are stored in app settings and consumed by `src/context/SocketContext.jsx`.
-
-## Build for production
-
-```bash
-bun run build
-```
-
-This outputs the production files into the `dist/` directory (see `capacitor.config.json`).
-
-To preview the production build locally:
-
-```bash
-bun run preview
-```
-
-## Capacitor / Android
-
-Capacitor is configured with `webDir: "dist"` in `capacitor.config.json`, so you must run a production build or a preview build before copying web assets into the native project.
-
-Typical steps to run on Android (first time):
-
-```bash
-bun run build
-bunx cap copy android
-bunx cap open android
-```
-
-Then build/run the Android project from Android Studio or use `bunx cap run android`.
-
-If you want to iterate faster on device while developing, you can run the dev server and use a live web URL, but you'll need to configure Capacitor and Android to load a remote URL (not covered here).
-
-## WebSocket protocol (what the app expects)
-
-The frontend's socket logic is in `src/context/SocketContext.jsx`. The app expects a WebSocket server that speaks the following simple JSON messages:
-
-- Client -> Server (authenticate immediately on open):
-
-```json
-{ "type": "auth", "token": "<token string>" }
-```
-
-- Server -> Client (initial or updated switches state):
-
-```json
-{ "type": "switches", "switches": [ { "id": "1", "state": "ON" }, { "id": "2", "state": "OFF" } ] }
-```
-
-- Client -> Server (toggle a single switch):
-
-```json
-{ "type": "toggle", "id": "<id>", "state": "ON" }
-```
-
-- Client -> Server (set all):
-
-```json
-{ "type": "all", "state": "OFF" }
-```
-
-The client will send `auth` on connect and expects periodic or event-driven `switches` messages to update UI. The client also sends `toggle` and `all` messages when the user interacts with the UI.
-
-If you implement a server, mirror these message shapes. The app logs invalid JSON and will warn if no `settings.address` is configured.
-
-## Configuration (in-app)
-
-- Open the app and go to the Settings page. Save the WebSocket address (e.g. `ws://192.168.1.50:8080`) and the token. The UI uses those settings to open the socket.
-- If the WebSocket address is missing, the app will not attempt a connection and prints a warning to the console.
-
-## Project structure (important files)
-
-- `src/` — React source
-	- `main.jsx` — app bootstrap
-	- `App.jsx` — router + layout
-	- `context/SocketContext.jsx` — WebSocket handling and API used by UI
-	- `context/AppContext.jsx` — app-wide settings/state (settings, tokens)
-	- `components/` — UI components (BottomNav, etc.)
-	- `pages/` — `Home.jsx`, `Settings.jsx`
-- `capacitor.config.json` — Capacitor settings (webDir = dist)
-- `package.json` — scripts and dependencies
-
-## Troubleshooting
-
-- "WebSocket disconnected" or no switches visible: verify `settings.address` is correct and the server is reachable from the device. Check browser/Android logs.
-- Invalid JSON messages are logged by the client; ensure your server sends valid JSON.
-- If tokens are rejected, ensure the server's auth behavior matches the `auth` message shape above.
-
-## Contributing
-
-Contributions are welcome. Suggested workflow:
-
-1. Fork the repo, create a branch for your change.
-2. Keep changes small and well-scoped.
-3. Open a pull request with a clear description.
-
-Please run lint before opening PRs:
-
-```bash
-bun run lint
-```
-
-## License
-
-This project does not include a license file. If you want to add a license, create a `LICENSE` file in the repository root (MIT is common for small projects).
-
-## Contact / Notes
-
-If you want help wiring the server or improving the mobile build flow, tell me which platform you want to target (local network Android, remote server, ngrok, etc.) and I can add step-by-step instructions.
-
----
-
